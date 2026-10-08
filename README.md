@@ -1,0 +1,22 @@
+# Hadalird
+
+Optional small and medium application integrations for Hadalis: TLP, Thinkfan
+and Obsidian. Hadalis owns generic Battery, Power Profiles, Todo, Notes,
+configuration and UI primitives. Hadalird owns the integration workers,
+application-specific settings, byte-safe vault helpers and privileged helper
+payloads. Existing integration preferences and application data are retained.
+
+Install a committed revision with `make install`. Installation does not enable
+an integration, launch Obsidian, change fan/charge policies, or stop existing
+system services. Each integration loads one disposable QML tree when explicitly
+enabled in Hadalis. Missing packages report unavailable rather than claiming an
+operation succeeded. `make uninstall` deactivates only this package's owned
+link; releases, user configuration, vaults and system services are preserved.
+
+Privileged helper installation is separate: `sudo make install-helpers`.
+This installs helper/polkit/schema files and does not enable services or create
+TLP configuration overrides. Prefixes and `DESTDIR` are supported for packaging.
+
+Run `make test` for scoped filesystem/helper and installation contracts.
+Initial provenance is recorded in `manifest.json`. Host cutover and native
+integration qualification are tracked in Hadalis `to-do/cloud-bot/ABYSS.md`.

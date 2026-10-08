@@ -1,0 +1,24 @@
+{
+  "id": "hadalird",
+  "version": "0.1.0",
+  "host": "Hadalis",
+  "hostApi": 1,
+  "session": "HadalisSession.qml",
+  "integrations": [
+    "tlp",
+    "thinkfan",
+    "obsidian"
+  ],
+  "settings": {
+    "tlp": "modules/settings/TlpPowerSettings.qml",
+    "obsidian": "modules/settings/ObsidianThemeSettings.qml"
+  },
+  "backends": {
+    "managedTodo": "services/ObsidianTodoBackend.qml",
+    "dailyTodo": "services/DailyNoteTodoBackend.qml"
+  },
+  "derivedFrom": {
+    "repository": "llocphann/Hadalis",
+    "sourceSha": "6abf56328350b5871f1c626b2752d5e25d658539"
+  }
+}
