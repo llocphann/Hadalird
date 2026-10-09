@@ -17,6 +17,8 @@ import Quickshell.Io
  */
 Scope {
     id: root
+    property bool _live: true
+    Component.onDestruction: root._live = false
 
     property bool active: false
     property string vaultPath: ""
@@ -203,7 +205,7 @@ Scope {
         root.busy = mutationProc.running
         if (root._refreshQueued && root.configured && !mutationProc.running) {
             root._refreshQueued = false
-            Qt.callLater(() => root.refresh())
+            Qt.callLater(() => { if (root._live) root.refresh() })
         }
     }
 
@@ -255,7 +257,7 @@ Scope {
         root._clearError()
         root.refreshCapabilities()
         if (!capabilityProc.running)
-            Qt.callLater(() => root._dispatchPendingMutation())
+            Qt.callLater(() => { if (root._live) root._dispatchPendingMutation() })
         return true
     }
 
@@ -538,7 +540,7 @@ Scope {
         root.busy = scanProc.running
         if (root._refreshQueued && root.configured && !scanProc.running) {
             root._refreshQueued = false
-            Qt.callLater(() => root.refresh())
+            Qt.callLater(() => { if (root._live) root.refresh() })
         }
     }
 
@@ -579,7 +581,7 @@ Scope {
             const task = root._taskById(mutationProc.taskId)
             if (task) {
                 root.busy = false
-                Qt.callLater(() => root._startRichToggle(task, true))
+                Qt.callLater(() => { if (root._live) root._startRichToggle(task, true) })
                 return
             }
         }

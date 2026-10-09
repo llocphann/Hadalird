@@ -9,6 +9,9 @@ import qs.modules.common.widgets
 
 ColumnLayout {
     id: root
+    property bool _live: true
+    Component.onDestruction: root._live = false
+    objectName: "hadalirdTlpSettingRow"
 
     required property var definition
     property string groupDescription: ""
@@ -516,8 +519,9 @@ ColumnLayout {
         target: TlpSettingsService
 
         function reloadEditor(): void {
+            if (!root._live) return
             editorLoader.active = false
-            Qt.callLater(() => editorLoader.active = true)
+            Qt.callLater(() => { if (root._live) editorLoader.active = true })
         }
 
         function onManagedValuesChanged(): void { reloadEditor() }

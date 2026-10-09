@@ -15,7 +15,8 @@
     "obsidianTodo": "modules/settings/ObsidianTodoSettings.qml",
     "tlpRow": "modules/settings/TlpSettingRow.qml",
     "tlpWaffle": "modules/waffle/settings/WTlpPowerSettings.qml",
-    "tlpWaffleRow": "modules/waffle/settings/WTlpSettingRow.qml"
+    "tlpWaffleRow": "modules/waffle/settings/WTlpSettingRow.qml",
+    "thinkfan": "modules/settings/ThinkfanSettings.qml"
   },
   "backends": {
     "managedTodo": "services/ObsidianTodoBackend.qml",

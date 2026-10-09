@@ -13,6 +13,7 @@ test:
 	@node scripts/test-tlp-allowed-limits-parity.cjs
 	@python3 scripts/test-obsidian-todo-settings.py
 	@python3 scripts/test-fan-worker-contract.py
+	@python3 scripts/test-thinkfan-settings.py
 	@python3 scripts/test-todo-obsidian-helper.py
 	@python3 scripts/test-todo-obsidian-daily-helper.py
 	@python3 scripts/test-todo-obsidian-tasks-runtime.py
@@ -22,6 +23,7 @@ test:
 	@python3 scripts/test-zettelkasten-quicknote.py
 	@python3 scripts/test-qml.py
 	@python3 scripts/test-host-runtime.py
+	@python3 scripts/test-settings-host-runtime.py
 
 install:
 	@python3 scripts/install.py install

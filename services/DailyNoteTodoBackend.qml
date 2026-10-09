@@ -13,6 +13,8 @@ import Quickshell.Io
  */
 Scope {
     id: root
+    property bool _live: true
+    Component.onDestruction: root._live = false
 
     property bool active: false
     property string vaultPath: ""
@@ -281,7 +283,7 @@ Scope {
         root.busy = mutationProc.running
         if (root._refreshQueued && root.configured && !mutationProc.running) {
             root._refreshQueued = false
-            Qt.callLater(() => root.refresh())
+            Qt.callLater(() => { if (root._live) root.refresh() })
         }
     }
 
@@ -289,7 +291,7 @@ Scope {
         root.busy = scanProc.running
         if (root._refreshQueued && root.configured && !scanProc.running) {
             root._refreshQueued = false
-            Qt.callLater(() => root.refresh())
+            Qt.callLater(() => { if (root._live) root.refresh() })
         }
     }
 

@@ -34,4 +34,33 @@ assert todo.count('title: Translation.tr("To-do & Quick Notes")')==1
 assert todo.count('placeholderText: ""')>=3
 assert '/^\\/+|\\/+$/g' in todo
 assert 'notes.zettelkasten.folder' in todo and 'notes.zettelkasten.defaultType' in todo
+for token in ['title: Translation.tr("Quick Notes")', 'Translation.tr("Default Zettelkasten type")', 'value: "Fleeting"', 'value: "Literature"', 'value: "Permanent"', 'Zettelkasten.folder', 'Translation.tr("Activate verified source.")']:
+    assert token in todo, token
+zettel=todo[todo.index('title: Translation.tr("Quick Notes")'):]
+assert 'color: Appearance.colors.colSubtext' not in zettel
+assert 'placeholderText: "00_Capture/03_Zettelkasten"' not in zettel
+assert 'Translation.tr("Canonical task store")' not in todo
 print('HADALIRD_OBSIDIAN_TODO_SETTINGS_PASS')
+
+INTEGRATIONS=todo
+for removed_copy in (
+    'Translation.tr("One Markdown file and heading.")',
+    'Translation.tr("Obsidian vault root.")',
+    'Translation.tr("Fixed or date-based Markdown path.")',
+    'Translation.tr("Checkboxes under this heading only.")',
+    'Translation.tr("Direct Markdown sync.")',
+    'Translation.tr("Capture to Zettelkasten; keep the draft.")',
+    'Translation.tr("Blank = reuse Todo vault.")',
+    'Translation.tr("Vault-relative capture folder.")',
+    'Translation.tr("Uses the vault Zettelkasten template.")',
+    'Translation.tr("Vault path override")',
+):
+    assert removed_copy not in INTEGRATIONS, f"redundant Settings copy returned: {removed_copy}"
+
+for stale in (
+    "Use one Markdown note source. The path may be fixed or contain date tokens",
+    "Physical Obsidian vault folder. Hadalis resolves the configured note strictly inside this directory.",
+    "Dashboard Quick Notes are drafts until capture. A successful capture creates one filesystem-canonical Zettelkasten note, then clears the unchanged draft.",
+    "The generated Markdown follows the vault's Zettelkasten schema:",
+):
+    assert stale not in INTEGRATIONS, f"verbose/stale Settings copy returned: {stale}"

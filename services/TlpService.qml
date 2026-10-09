@@ -8,6 +8,8 @@ import qs.modules.common
 
 Item {
     id: root
+    property bool _live: true
+    Component.onDestruction: root._live = false
     property string helperPath: "/usr/libexec/inir-battery-charge-limit"
 
     property bool available: false
@@ -224,7 +226,7 @@ Item {
 
         function onConfigChanged(): void {
             // Let revision-dependent bindings settle before comparing state.
-            Qt.callLater(() => root.apply())
+            Qt.callLater(() => { if (root._live) root.apply() })
         }
 
         function onReadyChanged(): void {
@@ -258,7 +260,7 @@ Item {
             console.warn("[TLP] Failed to start battery charge policy helper")
             if (root._redetectAfterCurrent) {
                 root._redetectAfterCurrent = false
-                Qt.callLater(() => root._detect())
+                Qt.callLater(() => { if (root._live) root._detect() })
             } else {
                 root._reconcileAfterDetect = false
             }
@@ -279,7 +281,7 @@ Item {
                 root._clearStatus()
                 if (root._redetectAfterCurrent) {
                     root._redetectAfterCurrent = false
-                    Qt.callLater(() => root._detect())
+                    Qt.callLater(() => { if (root._live) root._detect() })
                 } else {
                     root._reconcileAfterDetect = false
                 }
@@ -288,14 +290,14 @@ Item {
 
             if (root._redetectAfterCurrent) {
                 root._redetectAfterCurrent = false
-                Qt.callLater(() => root._detect())
+                Qt.callLater(() => { if (root._live) root._detect() })
                 return
             }
 
             const reconcile = root._reconcileAfterDetect
             root._reconcileAfterDetect = false
             if (reconcile)
-                Qt.callLater(() => root.apply())
+                Qt.callLater(() => { if (root._live) root.apply() })
         }
     }
 

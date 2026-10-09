@@ -5,6 +5,8 @@ import qs.modules.common
 import qs.services as HostServices
 Item {
  id:root
+ property bool _live: true
+ Component.onDestruction: root._live = false
  readonly property var options:Config.options?.integrations?.obsidian
  readonly property bool enabled:Config.ready && (options?.autoTheme ?? false)
  readonly property string vaultPath:HostServices.Todo.sharedVaultPath
@@ -52,7 +54,7 @@ Item {
     if(result.ok){root.info=result;root.error=""}
     else root.error=result.error || "Could not update Obsidian"
    }catch(e){if(!root.error)root.error="Could not read Obsidian configuration"}
-   Qt.callLater(root.runNext)
+   Qt.callLater(() => { if (root._live) root.runNext() })
   }
  }
 }

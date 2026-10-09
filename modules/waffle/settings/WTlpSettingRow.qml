@@ -9,6 +9,9 @@ import qs.modules.waffle.settings
 
 ColumnLayout {
     id: root
+    property bool _live: true
+    Component.onDestruction: root._live = false
+    objectName: "hadalirdWaffleTlpSettingRow"
 
     required property var definition
     property bool compactProfileRows: false
@@ -388,17 +391,18 @@ ColumnLayout {
         }
 
         function reloadEditor(): void {
+            if (!root._live) return
             editorLoader.active = false
-            Qt.callLater(() => editorLoader.active = true)
+            Qt.callLater(() => { if (root._live) editorLoader.active = true })
         }
 
         function onManagedValuesChanged(): void {
-            Qt.callLater(syncOverride)
+            Qt.callLater(() => { if (root._live) syncOverride() })
             reloadEditor()
         }
         function onEffectiveValuesChanged(): void { reloadEditor() }
         function onPendingValuesChanged(): void {
-            Qt.callLater(syncOverride)
+            Qt.callLater(() => { if (root._live) syncOverride() })
             if (!TlpSettingsService.hasPendingChanges)
                 reloadEditor()
         }

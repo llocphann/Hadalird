@@ -9,6 +9,8 @@ import qs.modules.common
 
 Item {
     id: root
+    property bool _live: true
+    Component.onDestruction: root._live = false
     property string helperPath: "/usr/libexec/inir-thinkfan"
 
     property bool available: false
@@ -162,7 +164,7 @@ Item {
         if (root.profileFanControlEnabled
                 && root.activePowerProfileKey === normalizedKey
                 && root.profile !== "managed") {
-            Qt.callLater(() => root.applyFanLevel(normalizedLevel))
+            Qt.callLater(() => { if (root._live) root.applyFanLevel(normalizedLevel) })
         }
         return true
     }
@@ -177,13 +179,13 @@ Item {
         if (!nextEnabled) {
             root._queuedFanLevel = ""
             if (root.profile !== "managed")
-                Qt.callLater(() => root.applyFanLevel("auto"))
+                Qt.callLater(() => { if (root._live) root.applyFanLevel("auto") })
             return true
         }
 
         if (root.profile !== "managed") {
             const requestedLevel = root.configuredActiveFanLevel
-            Qt.callLater(() => root.applyFanLevel(requestedLevel))
+            Qt.callLater(() => { if (root._live) root.applyFanLevel(requestedLevel) })
         }
         return true
     }
@@ -296,6 +298,7 @@ Item {
             return
         root._fanConfigApplyQueued = true
         Qt.callLater(() => {
+            if (!root._live) return
             root._fanConfigApplyQueued = false
             if (root._profileFollowArmed && root.profileFanControlEnabled
                     && root.profile !== "managed")
@@ -371,7 +374,7 @@ Item {
             root._lastStatusRefreshAt = Date.now()
             if (root._refreshQueued) {
                 root._refreshQueued = false
-                Qt.callLater(() => root.refresh())
+                Qt.callLater(() => { if (root._live) root.refresh() })
             }
         }
         onStarted: {
@@ -390,7 +393,7 @@ Item {
             root._lastStatusRefreshAt = Date.now()
             if (root._refreshQueued) {
                 root._refreshQueued = false
-                Qt.callLater(() => root.refresh())
+                Qt.callLater(() => { if (root._live) root.refresh() })
             }
         }
     }
@@ -430,7 +433,7 @@ Item {
             root.lastApplyError = "apply-start-failed"
             root.pendingOperation = ""
             console.warn("[ThinkFan] Failed to start privileged fan-control helper")
-            Qt.callLater(() => root.refresh())
+            Qt.callLater(() => { if (root._live) root.refresh() })
         }
         onStarted: {
             applyProcess.startObserved = true
@@ -456,11 +459,11 @@ Item {
                     && completedOperation === "profile:firmware"
                     && root.profileFanControlEnabled) {
                 root._queuedFanLevel = ""
-                Qt.callLater(() => root.applyConfiguredPowerProfileFanLevel())
+                Qt.callLater(() => { if (root._live) root.applyConfiguredPowerProfileFanLevel() })
             } else if (root._queuedFanLevel.length > 0) {
-                Qt.callLater(() => root._drainQueuedFanLevel())
+                Qt.callLater(() => { if (root._live) root._drainQueuedFanLevel() })
             }
-            Qt.callLater(() => root.refresh())
+            Qt.callLater(() => { if (root._live) root.refresh() })
         }
     }
 

@@ -8,6 +8,8 @@ import qs.modules.common
 
 Item {
     id: root
+    property bool _live: true
+    Component.onDestruction: root._live = false
 
     signal mutationFinished(string kind, bool success)
 
@@ -723,7 +725,7 @@ Item {
             root.lastError = "TLP settings status helper failed to start"
             console.warn("[TLP Settings]", root.lastError)
             if (root._refreshPending)
-                Qt.callLater(() => root.refresh())
+                Qt.callLater(() => { if (root._live) root.refresh() })
         }
 
         onStarted: {
@@ -746,7 +748,7 @@ Item {
             }
 
             if (root._refreshPending)
-                Qt.callLater(() => root.refresh())
+                Qt.callLater(() => { if (root._live) root.refresh() })
         }
     }
 

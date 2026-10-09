@@ -9,6 +9,7 @@ import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.modules.settings
 SettingsCardSection {
+    objectName: "hadalirdObsidianTodoSettings"
     settingsTaskSection: "obsidian"
     expanded: true
     icon: "checklist"
@@ -146,7 +147,9 @@ SettingsCardSection {
 
             MaterialTextField {
                 id: todoMarkdownNotePattern
+                objectName: "obsidianTodoNotePattern"
                 Layout.fillWidth: true
+                implicitWidth: 0
                 placeholderText: ""
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.family: Appearance.font.family.monospace
@@ -199,7 +202,9 @@ SettingsCardSection {
 
             MaterialTextField {
                 id: todoMarkdownHeading
+                objectName: "obsidianTodoHeading"
                 Layout.fillWidth: true
+                implicitWidth: 0
                 placeholderText: ""
                 font.pixelSize: Appearance.font.pixelSize.small
                 color: Appearance.colors.colOnSurface
@@ -615,7 +620,9 @@ SettingsCardSection {
 
             MaterialTextField {
                 id: zettelkastenFolder
+                objectName: "obsidianQuickNoteFolder"
                 Layout.fillWidth: true
+                implicitWidth: 0
                 placeholderText: ""
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.family: Appearance.font.family.monospace
