@@ -117,6 +117,8 @@ for path,tokens in CONTRACTS.items():
     for token in tokens:
         assert token in text, path+" lost contract: "+token
 managed=(ROOT/"services/ObsidianTodoBackend.qml").read_text()
+for token in ('root._notifyMigrationFinished(false, null)', 'root._notifyMigrationFinished(true, payload)'):
+    assert token in managed, "owned migration completion lost contract: "+token
 for token in ('["obsidian"','"eval"','vault=','bySymbol[symbol] ?? item.statusType'):
     assert token not in managed, "QML must not bypass non-launching/active-vault/status guards: "+token
 daily=(ROOT/"services/DailyNoteTodoBackend.qml").read_text()
@@ -126,4 +128,6 @@ for path in ("scripts/todo/obsidian_todo.py","scripts/todo/obsidian_tasks.py"):
 settings=(ROOT/"modules/settings/ObsidianThemeSettings.qml").read_text()
 for token in ('id: todoObsidianVaultPath','updates["todo.obsidian.vaultPath"] = value','updates["notes.zettelkasten.vaultPath"] = ""','Config.setNestedValues(updates)'):
     assert token in settings, "shared-vault settings lost contract: "+token
+for token in ('Translation.tr("Obsidian vault folder")', 'Translation.tr("Shared by To-do and Zettelkasten.")', 'text: Todo.sharedVaultPath'):
+    assert token in settings, "shared-vault label/help lost contract: "+token
 print("HADALIRD_OBSIDIAN_WORKER_CONTRACTS_PASS managed/daily source identity, migration/status/plugin boundaries, quick-note template and shared vault")

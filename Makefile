@@ -16,6 +16,7 @@ test:
 	@python3 scripts/test-todo-obsidian-tasks-runtime.py
 	@python3 scripts/test-obsidian-theme.py
 	@python3 scripts/test-obsidian-worker-contracts.py
+	@python3 scripts/test-obsidian-path-settings-runtime.py
 	@python3 scripts/test-zettelkasten-quicknote.py
 	@python3 scripts/test-qml.py
 	@python3 scripts/test-host-runtime.py
