@@ -1,0 +1,24 @@
+name: CPU capability probe contract
+on:
+  push:
+    paths:
+      - 'services/TlpRuntimeCapabilities.qml'
+      - 'scripts/test-tlp-vendor-probes.py'
+      - 'Makefile'
+      - '.github/workflows/cpu-vendor-probe.yml'
+  pull_request:
+    paths:
+      - 'services/TlpRuntimeCapabilities.qml'
+      - 'scripts/test-tlp-vendor-probes.py'
+      - 'Makefile'
+      - '.github/workflows/cpu-vendor-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate vendor-specific sysfs gating
+        run: python3 scripts/test-tlp-vendor-probes.py

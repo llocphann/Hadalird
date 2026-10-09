@@ -175,8 +175,10 @@ Item {
         governorFile.reload()
         memSleepFile.reload()
         scalingDriverFile.reload()
-        intelPstateStatusFile.reload()
-        amdPstateStatusFile.reload()
+        if (intelPstateStatusFile.path.length > 0)
+            intelPstateStatusFile.reload()
+        if (amdPstateStatusFile.path.length > 0)
+            amdPstateStatusFile.reload()
         kernelReleaseFile.reload()
         if (!gpuProbe.running)
             gpuProbe.running = true
@@ -219,18 +221,29 @@ Item {
         id: scalingDriverFile
         path: "/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver"
         onLoaded: {
-            root.cpuScalingDriver = scalingDriverFile.text().trim()
+            const driver = scalingDriverFile.text().trim()
+            if (driver !== "intel_pstate" && driver !== "intel_cpufreq")
+                root.intelPstateStatus = ""
+            if (driver !== "amd-pstate" && driver !== "amd-pstate-epp")
+                root.amdPstateStatus = ""
+            root.cpuScalingDriver = driver
             root._refreshCpuDriverModes()
         }
         onLoadFailed: {
             root.cpuScalingDriver = ""
+            root.intelPstateStatus = ""
+            root.amdPstateStatus = ""
             root._refreshCpuDriverModes()
         }
     }
 
     FileView {
         id: intelPstateStatusFile
-        path: "/sys/devices/system/cpu/intel_pstate/status"
+        // Empty path unloads FileView: an AMD driver must not probe Intel sysfs.
+        path: root.cpuScalingDriver === "intel_pstate"
+            || root.cpuScalingDriver === "intel_cpufreq"
+            ? "/sys/devices/system/cpu/intel_pstate/status" : ""
+        printErrors: false
         onLoaded: {
             root.intelPstateStatus = intelPstateStatusFile.text().trim()
             root._refreshCpuDriverModes()
@@ -243,7 +256,10 @@ Item {
 
     FileView {
         id: amdPstateStatusFile
-        path: "/sys/devices/system/cpu/amd_pstate/status"
+        path: root.cpuScalingDriver === "amd-pstate"
+            || root.cpuScalingDriver === "amd-pstate-epp"
+            ? "/sys/devices/system/cpu/amd_pstate/status" : ""
+        printErrors: false
         onLoaded: {
             root.amdPstateStatus = amdPstateStatusFile.text().trim()
             root._refreshCpuDriverModes()
