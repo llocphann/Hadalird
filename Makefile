@@ -1,6 +1,7 @@
 LIBEXECDIR ?= /usr/libexec
 POLKIT_ACTIONS_DIR ?= /usr/share/polkit-1/actions
 INIR_SYSTEM_SHAREDIR ?= /usr/share/inir
+TLP_CONFDIR ?= /etc/tlp.d
 
 .PHONY: test install uninstall install-helpers
 test:
@@ -23,7 +24,9 @@ uninstall:
 # Installation never changes hardware state, stops services or writes profiles.
 install-helpers:
 	@set -eu; stage=$$(mktemp -d); trap 'rm -rf "$$stage"' EXIT HUP INT TERM; \
-	 sed 's|/usr/share/inir/tlp-settings-schema.json|$(INIR_SYSTEM_SHAREDIR)/tlp-settings-schema.json|g' assets/helpers/inir-battery-charge-limit > "$$stage/battery"; \
+	 sed -e 's|^config_dir=.*|config_dir=$(TLP_CONFDIR)|' \
+	     -e 's|^tlp_settings_schema=.*|tlp_settings_schema=$(INIR_SYSTEM_SHAREDIR)/tlp-settings-schema.json|' \
+	     assets/helpers/inir-battery-charge-limit > "$$stage/battery"; \
 	 install -Dm755 "$$stage/battery" "$(DESTDIR)$(LIBEXECDIR)/inir-battery-charge-limit"; \
 	 install -Dm755 assets/helpers/inir-thinkfan "$(DESTDIR)$(LIBEXECDIR)/inir-thinkfan"; \
 	 sed 's|/usr/libexec/inir-battery-charge-limit|$(LIBEXECDIR)/inir-battery-charge-limit|g' assets/polkit/org.inir.battery-charge-limit.policy > "$$stage/tlp.policy"; \

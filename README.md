@@ -16,6 +16,10 @@ link; releases, user configuration, vaults and system services are preserved.
 Privileged helper installation is separate: `sudo make install-helpers`.
 This installs helper/polkit/schema files and does not enable services or create
 TLP configuration overrides. Prefixes and `DESTDIR` are supported for packaging.
+`LIBEXECDIR`, `POLKIT_ACTIONS_DIR`, `INIR_SYSTEM_SHAREDIR` and `TLP_CONFDIR`
+control helper, policy, schema and profile locations; helper installation does
+not create profile directories or overrides. TLP (including its optional
+Radio Device Wizard), Thinkfan and Obsidian remain separately installed apps.
 
 Run `make test` for scoped filesystem/helper and installation contracts.
 Initial provenance is recorded in `manifest.json`. Host cutover and native

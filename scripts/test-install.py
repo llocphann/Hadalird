@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("installer", ROOT / "scripts/install.py")
@@ -54,8 +55,23 @@ with tempfile.TemporaryDirectory(prefix="hadalird-install-") as name:
     except ValueError:
         pass
     stage = private / "system"
-    subprocess.run(["make", "install-helpers", "DESTDIR=" + str(stage), "LIBEXECDIR=/custom/libexec"], cwd=source, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(["make", "install-helpers", "DESTDIR=" + str(stage), "LIBEXECDIR=/custom/libexec",
+                    "POLKIT_ACTIONS_DIR=/custom/share/polkit-1/actions", "INIR_SYSTEM_SHAREDIR=/custom/share/inir",
+                    "TLP_CONFDIR=/custom/etc/tlp.d"], cwd=source, check=True, stdout=subprocess.DEVNULL)
     assert (stage / "custom/libexec/inir-thinkfan").is_file()
-    assert "/custom/libexec/inir-thinkfan" in (stage / "usr/share/polkit-1/actions/org.inir.thinkfan.policy").read_text()
-    assert not (stage / "etc").exists()
+    battery = stage / "custom/libexec/inir-battery-charge-limit"
+    # Source only pure helper definitions under the fixture basename, so neither
+    # root checks nor hardware actions run. Read the installed path assignments.
+    result = subprocess.run(["sh", "-ec", '. "$1"; printf "%s\\n" "$config_dir" "$config_file" "$tlp_settings_config_file" "$tlp_settings_schema"',
+                             "fixture", str(battery)], check=True, text=True, capture_output=True)
+    assert result.stdout.splitlines() == ["/custom/etc/tlp.d", "/custom/etc/tlp.d/99-inir-battery-charge-limit.conf",
+                                          "/custom/etc/tlp.d/99-inir-tlp-settings.conf", "/custom/share/inir/tlp-settings-schema.json"]
+    for feature, helper in (("battery-charge-limit", "inir-battery-charge-limit"), ("thinkfan", "inir-thinkfan")):
+        policy = ET.parse(stage / "custom/share/polkit-1/actions" / ("org.inir." + feature + ".policy"))
+        assert policy.find('.//annotate[@key="org.freedesktop.policykit.exec.path"]').text == "/custom/libexec/" + helper
+        assert policy.find('.//allow_any').text == "no"
+        assert policy.find('.//allow_inactive').text == "no"
+        assert policy.find('.//allow_active').text == "yes"
+    assert (stage / "custom/share/inir/tlp-settings-schema.json").is_file()
+    assert not (stage / "etc").exists() and not (stage / "custom/etc").exists()
 print("HADALIRD_INSTALL_PASS exact source, immutable release, owned link, idempotence, prefix/DESTDIR, no profiles")
