@@ -13,6 +13,7 @@ import os
 import re
 import stat
 import sys
+from urllib.parse import unquote, urlsplit, quote
 from datetime import datetime, timedelta
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -22,6 +23,97 @@ DEFAULT_FOLDER = "00_Capture/03_Zettelkasten"
 DEFAULT_TYPE = "Fleeting"
 
 _IMPORT_RE = re.compile(r'^hadalis_import_id:\s*"([^"]+)"\s*$')
+_IMAGE_RE = re.compile(r'!\[[^\]\n]*\]\((file://[^)\r\n]+)\)')
+
+
+def _attachment_dir(vault: Path, note_dir: Path, config_path: str) -> Path:
+    config = Path(config_path).expanduser() if config_path else vault / ".obsidian"
+    if not config.is_absolute():
+        config = vault / config
+    app = config / "app.json"
+    try:
+        options = json.loads(app.read_text(encoding="utf-8")) if app.exists() else {}
+        location = options.get("attachmentFolderPath", "")
+        if not isinstance(location, str):
+            raise ValueError("attachmentFolderPath must be a string")
+    except (OSError, ValueError, AttributeError) as error:
+        raise ZettelError("attachment_config_invalid", f"cannot read vault attachment settings: {error}") from error
+    if location in (".", "./"):
+        target = note_dir
+    elif location.startswith("./"):
+        target = note_dir / location[2:]
+    else:
+        target = vault / location
+    resolved = target.resolve(strict=False)
+    if not resolved.is_relative_to(vault):
+        raise ZettelError("attachment_outside_vault", "attachment folder escapes the vault")
+    return resolved
+
+
+def _export_images(vault: Path, note_dir: Path, body: str,
+                   attachment_root: str, config_path: str) -> tuple[str, list[dict[str, str]]]:
+    links = list(dict.fromkeys(match.group(1) for match in _IMAGE_RE.finditer(body)))
+    if not links or not attachment_root:
+        return body, []
+    try:
+        root = Path(attachment_root).expanduser().resolve(strict=True)
+        target = _attachment_dir(vault, note_dir, config_path)
+        pending = []
+        for link in links:
+            url = urlsplit(link)
+            source = Path(unquote(url.path))
+            if url.netloc not in ("", "localhost") or source.is_symlink() or source.resolve(strict=True).parent != root:
+                raise ZettelError("attachment_source_invalid", "image is not in the Quick Notes attachment store")
+            if not re.fullmatch(r"[0-9a-f]{64}\.(png|jpg|webp|gif|bmp|tiff)", source.name):
+                raise ZettelError("attachment_source_invalid", "image has an invalid stored filename")
+            if source.stat().st_size > 32 * 1024 * 1024:
+                raise ZettelError("attachment_source_invalid", "stored image exceeds 32 MiB")
+            data = source.read_bytes()
+            digest = _sha256_bytes(data)
+            if source.stem != digest:
+                raise ZettelError("attachment_source_changed", "stored image bytes changed; the draft was preserved")
+            pending.append((link, source, data, digest))
+        # Validate every source before creating any destination image.
+        target.mkdir(parents=True, exist_ok=True)
+        if not target.resolve(strict=True).is_relative_to(vault):
+            raise ZettelError("attachment_outside_vault", "attachment folder escapes the vault")
+        exports = []
+        for link, source, data, digest in pending:
+            for suffix in range(100):
+                name = source.name if suffix == 0 else source.stem + f"-{suffix}" + source.suffix
+                destination = target / name
+                try:
+                    fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                except FileExistsError:
+                    if destination.is_symlink() or destination.read_bytes() != data:
+                        continue
+                else:
+                    try:
+                        with os.fdopen(fd, "wb") as stream:
+                            stream.write(data)
+                            stream.flush()
+                            os.fsync(stream.fileno())
+                    except OSError:
+                        destination.unlink(missing_ok=True)
+                        raise
+                if destination.read_bytes() != data:
+                    raise ZettelError("attachment_verify_failed", "cannot verify copied image bytes")
+                directory_fd = os.open(target, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+                try:
+                    os.fsync(directory_fd)
+                finally:
+                    os.close(directory_fd)
+                relative = Path(os.path.relpath(destination, note_dir)).as_posix()
+                body = body.replace("(" + link + ")", "(" + quote(relative, safe="/") + ")")
+                exports.append({"path": destination.relative_to(vault).as_posix(), "sha256": digest})
+                break
+            else:
+                raise ZettelError("attachment_collision", "cannot allocate an image without overwriting existing files")
+        return body, exports
+    except ZettelError:
+        raise
+    except (OSError, RuntimeError, ValueError) as error:
+        raise ZettelError("attachment_export_failed", f"cannot export note images: {error}") from error
 
 
 class ZettelError(Exception):
@@ -111,6 +203,8 @@ def _clean_title(title: str, body: str) -> str:
     value = str(title or "").strip()
     if not value:
         for line in str(body or "").splitlines():
+            if _IMAGE_RE.fullmatch(line.strip()):
+                continue
             candidate = line.strip().lstrip("#").strip()
             if candidate:
                 value = candidate
@@ -216,6 +310,8 @@ def capture(
     note_type: str = DEFAULT_TYPE,
     now: datetime | None = None,
     import_id: str = "",
+    attachment_root: str = "",
+    config_path: str = "",
 ) -> dict[str, Any]:
     vault = _resolve_vault(vault_path)
     normalized_folder, target_dir = _resolve_folder(vault, folder)
@@ -223,6 +319,7 @@ def capture(
     clean_title = _clean_title(title, body)
     clean_type = _normalize_type(note_type)
     filename_title = _filename_title(clean_title)
+    body, attachments = _export_images(vault, target_dir, body, attachment_root, config_path)
 
     for attempt in range(100):
         candidate_time = requested_time + timedelta(seconds=attempt)
@@ -269,7 +366,7 @@ def capture(
             raise ZettelError("note_write_failed", f"cannot persist Zettelkasten note: {exc}") from exc
 
         relative = PurePosixPath(normalized_folder, candidate.name).as_posix()
-        return {
+        result = {
             "ok": True,
             "id": note_id,
             "date": candidate_time.strftime("%Y-%m-%d"),
@@ -279,6 +376,9 @@ def capture(
             "noteFullPath": str(candidate),
             "templateCompatible": True,
         }
+        if attachments:
+            result["attachments"] = attachments
+        return result
 
     raise ZettelError("note_collision", "could not allocate a unique Zettelkasten ID")
 
@@ -471,6 +571,7 @@ def migrate_notepad_json(
     notepad_json_path: str,
     expected_source_sha: str,
     note_type: str = DEFAULT_TYPE,
+    config_path: str = "",
 ) -> dict[str, Any]:
     if not str(expected_source_sha or "").strip():
         raise ZettelError("missing_precondition", "expected Notepad source SHA is required")
@@ -512,6 +613,8 @@ def migrate_notepad_json(
             entry["body"],
             clean_type,
             import_id=entry["importId"],
+            attachment_root=str(source.parent / "notepad-attachments"),
+            config_path=config_path,
         )
         created_paths.append(result["notePath"])
 
@@ -554,6 +657,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--preview-notepad", default="")
     parser.add_argument("--migrate-notepad", default="")
     parser.add_argument("--expected-source-sha", default="")
+    parser.add_argument("--attachment-root", default="")
+    parser.add_argument("--config-path", default="")
     args = parser.parse_args(argv)
 
     try:
@@ -571,6 +676,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.migrate_notepad,
                 args.expected_source_sha,
                 args.type,
+                config_path=args.config_path,
             )
         else:
             payload = capture(
@@ -579,6 +685,8 @@ def main(argv: list[str] | None = None) -> int:
                 args.title,
                 args.body,
                 args.type,
+                attachment_root=args.attachment_root,
+                config_path=args.config_path,
             )
         _emit(payload)
         return 0

@@ -47,6 +47,10 @@ Item {
     }
 
     function capture(title, body): bool {
+        return root.captureWithAttachments(title, body, "")
+    }
+
+    function captureWithAttachments(title, body, attachmentRoot): bool {
         const content = String(body ?? "")
         if (!root.ready) {
             root._setError(
@@ -72,7 +76,9 @@ Item {
             "--folder", root.folder,
             "--title", String(title ?? ""),
             "--body", content,
-            "--type", root.defaultType
+            "--type", root.defaultType,
+            "--attachment-root", String(attachmentRoot ?? ""),
+            "--config-path", String(Config.options?.integrations?.obsidian?.configPath ?? "")
         ]
         captureProc.running = true
         return true
