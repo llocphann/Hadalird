@@ -8,6 +8,9 @@ test:
 	@python3 scripts/test-install.py
 	@sh scripts/test-battery-charge-limit-helper.sh
 	@bash scripts/test-thinkfan-helper.sh
+	@bash scripts/test-worker-lifecycle.sh
+	@sh scripts/test-tlp-settings-ui-guards.sh
+	@python3 scripts/test-fan-worker-contract.py
 	@python3 scripts/test-todo-obsidian-helper.py
 	@python3 scripts/test-todo-obsidian-daily-helper.py
 	@python3 scripts/test-todo-obsidian-tasks-runtime.py
