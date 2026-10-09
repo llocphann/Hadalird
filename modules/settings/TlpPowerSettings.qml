@@ -6,6 +6,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.settings
+import "." as Integration
 
 ColumnLayout {
     id: root
@@ -391,7 +392,7 @@ ColumnLayout {
                 Repeater {
                     model: groupCard.groupSettings
 
-                    delegate: TlpSettingRow {
+                    delegate: Integration.TlpSettingRow {
                         required property var modelData
                         definition: modelData
                         groupDescription: root.conciseGroupDescription(groupCard.modelData)

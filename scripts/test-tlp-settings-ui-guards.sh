@@ -135,4 +135,28 @@ assert_contains 'command.push("--charge-set"' "$settings_service" 'charge care m
 assert_eq 1 "$(grep -Fc 'const command = ["/usr/bin/pkexec", root.helperPath, "--config-apply"]' "$settings_service")" 'settings service must build one privileged Apply command'
 assert_not_contains 'applyOnLeave' "$settings_service" 'settings service must require explicit Apply'
 
+classic="$repo_root/modules/settings/TlpSettingRow.qml"
+waffle="$repo_root/modules/waffle/settings/WTlpSettingRow.qml"
+waffle_page="$repo_root/modules/waffle/settings/WTlpPowerSettings.qml"
+for row in "$classic" "$waffle"; do
+    assert_contains 'gpuFrequencyGroupKeys' "$row" \
+        "$(basename "$row") must stage Intel GPU frequency groups atomically"
+    assert_contains 'editorNumberRange' "$row" \
+        "$(basename "$row") must use runtime numeric bounds"
+    assert_contains 'next.length === 0 && root.settingKey.startsWith("PLATFORM_PROFILE_")' "$row" \
+        "$(basename "$row") must turn an empty TLP 1.11 profile list into inherit/unset"
+done
+
+for page in "$waffle_page"; do
+    assert_contains 'property bool _tlpDemandRefreshed: false' "$page" \
+        "$(basename "$page") must coalesce demand refreshes per visible session"
+    assert_contains 'onVisibleChanged:' "$page" \
+        "$(basename "$page") must refresh TLP state when shown again"
+    assert_contains 'TlpRuntimeCapabilities.refresh()' "$page" \
+        "$(basename "$page") must refresh runtime capabilities on demand"
+    assert_contains 'TlpSettingsService.refresh()' "$page" \
+        "$(basename "$page") must refresh TLP status on demand"
+done
+assert_contains 'model: root.visibleGroups' "$waffle_page" 'Waffle settings must render schema groups'
+assert_contains 'onButtonClicked: TlpSettingsService.apply()' "$waffle_page" 'Waffle settings must expose explicit Apply'
 printf '%s\n' HADALIRD_TLP_UI_GUARDS_PASS

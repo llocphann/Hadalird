@@ -1,6 +1,6 @@
 {
   "id": "hadalird",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "host": "Hadalis",
   "hostApi": 1,
   "session": "HadalisSession.qml",
@@ -11,7 +11,11 @@
   ],
   "settings": {
     "tlp": "modules/settings/TlpPowerSettings.qml",
-    "obsidian": "modules/settings/ObsidianThemeSettings.qml"
+    "obsidian": "modules/settings/ObsidianThemeSettings.qml",
+    "obsidianTodo": "modules/settings/ObsidianTodoSettings.qml",
+    "tlpRow": "modules/settings/TlpSettingRow.qml",
+    "tlpWaffle": "modules/waffle/settings/WTlpPowerSettings.qml",
+    "tlpWaffleRow": "modules/waffle/settings/WTlpSettingRow.qml"
   },
   "backends": {
     "managedTodo": "services/ObsidianTodoBackend.qml",
@@ -20,5 +24,9 @@
   "derivedFrom": {
     "repository": "llocphann/Hadalis",
     "sourceSha": "6abf56328350b5871f1c626b2752d5e25d658539"
+  },
+  "uiDerivedFrom": {
+    "repository": "llocphann/Hadalis",
+    "sourceSha": "53af215df39bce6cf7fda5c226bbb37bb14f6b9e"
   }
 }

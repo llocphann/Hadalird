@@ -10,6 +10,8 @@ test:
 	@bash scripts/test-thinkfan-helper.sh
 	@bash scripts/test-worker-lifecycle.sh
 	@sh scripts/test-tlp-settings-ui-guards.sh
+	@node scripts/test-tlp-allowed-limits-parity.cjs
+	@python3 scripts/test-obsidian-todo-settings.py
 	@python3 scripts/test-fan-worker-contract.py
 	@python3 scripts/test-todo-obsidian-helper.py
 	@python3 scripts/test-todo-obsidian-daily-helper.py

@@ -24,3 +24,9 @@ Radio Device Wizard), Thinkfan and Obsidian remain separately installed apps.
 Run `make test` for scoped filesystem/helper and installation contracts.
 Initial provenance is recorded in `manifest.json`. Host cutover and native
 integration qualification are tracked in Hadalis `to-do/cloud-bot/ABYSS.md`.
+
+Classic and Waffle TLP editors and Obsidian task/capture settings are owned
+here. Hadalis retains navigation, optional loaders, generic Battery controls
+and the preserved internal Todo store. The version 0.2 settings entrypoints
+are additive for host API 1; update Hadalird before the corresponding host
+cutover. Integration enable switches remain off by default.
