@@ -22,6 +22,9 @@ not create profile directories or overrides. TLP (including its optional
 Radio Device Wizard), Thinkfan and Obsidian remain separately installed apps.
 
 Run `make test` for scoped filesystem/helper and installation contracts.
+Native tests use the sibling `Hadalis` checkout by default; set
+`HADALIS_ROOT=/path/to/Hadalis` for another location. They require Quickshell,
+Qt 6 and private Niri, and use synthetic vaults and injected status helpers.
 Initial provenance is recorded in `manifest.json`. Host cutover and native
 integration qualification are tracked in Hadalis `to-do/cloud-bot/ABYSS.md`.
 
