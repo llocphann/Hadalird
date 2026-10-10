@@ -25,8 +25,18 @@ Run `make test` for scoped filesystem/helper and installation contracts.
 Native tests use the sibling `Hadalis` checkout by default; set
 `HADALIS_ROOT=/path/to/Hadalis` for another location. They require Quickshell,
 Qt 6 and private Niri, and use synthetic vaults and injected status helpers.
-Initial provenance is recorded in `manifest.json`. Host cutover and native
-integration qualification are tracked in Hadalis `to-do/cloud-bot/ABYSS.md`.
+Initial provenance is recorded in `manifest.json`. All current
+implementation, host-cutover, native integration and new feature **tasks are
+managed centrally in [Alis dev](https://github.com/llocphann/Alis/blob/dev/to-do/README.md)**,
+using its [Issues](https://github.com/llocphann/Alis/blob/dev/to-do/cloud-bot/ISSUES.md),
+[Rework](https://github.com/llocphann/Alis/blob/dev/to-do/cloud-bot/REWORK_OPTIMIZATION.md)
+and [New features](https://github.com/llocphann/Alis/blob/dev/to-do/cloud-bot/NEW_FEATURES.md)
+lists. This repository continues to own optional TLP, Thinkfan and Obsidian
+source, QML Settings, helpers and tests, but has no separate active task
+queue. Every change should reference its selected Alis task and pin the
+compatible Alis host and Integration source SHAs, with actual test receipts
+and remaining real-device/user-permission gates. No user data, vault or
+privileged system settings are modified merely by centralizing TODOs.
 
 Classic and Waffle TLP editors and Obsidian task/capture settings are owned
 here. Hadalis retains navigation, optional loaders, generic Battery controls
